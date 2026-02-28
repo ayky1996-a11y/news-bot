@@ -3,7 +3,7 @@ import telegram
 import time
 import os
 
-BOT_TOKEN = os.getenv("8788108827:AAGIXJtvH1VbI2BOON7aO1fHzev-hsalHHE")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = "@trade_with_PEACE1"
 
 bot = telegram.Bot(token=BOT_TOKEN)
