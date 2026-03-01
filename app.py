@@ -7,7 +7,7 @@ import asyncio
 # Variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = "@trade_with_PEACE1"
-RSS_URL = "https://feeds.reuters.com/reuters/worldNews"
+RSS_URL = "https://www.reutersagency.com/feed/?best-topics=business&post_type=best-topic"
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
