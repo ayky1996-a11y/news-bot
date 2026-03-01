@@ -6,17 +6,16 @@ import urllib.request
 import ssl
 import re
 from datetime import datetime, timedelta
-import time
 
 # --- Configuration ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = "@trade_with_PEACE1"
 
-# Fresh and Stable Sources
+# Updated Stable Sources
 RSS_SOURCES = [
+    "https://www.livemint.com/rss/markets", # Fast Indian Market News
     "https://www.investing.com/rss/news_285.rss", 
-    "https://www.investing.com/rss/market_overview_investing_ideas.rss",
-    "https://www.reutersagency.com/feed/?best-topics=political-general&post_type=best-topic"
+    "https://www.investing.com/rss/market_overview_investing_ideas.rss"
 ]
 
 async def get_smart_prefix(text):
@@ -40,13 +39,11 @@ async def fetch_and_post(bot, url, posted_links, ssl_context):
 
         for entry in feed.entries:
             if entry.link not in posted_links:
-                # --- TIME FILTER LOGIC ---
-                # News kab publish hui thi, usse check karna
+                # Time Filter: Sirf 24h purani news
                 published_time = None
-                if 'published_parsed' in entry:
+                if 'published_parsed' in entry and entry.published_parsed:
                     published_time = datetime(*entry.published_parsed[:6])
                 
-                # Sirf wahi news bhejni hai jo pichle 24 ghanton mein aayi ho
                 if published_time and (current_time - published_time) > timedelta(hours=24):
                     continue 
 
@@ -55,7 +52,10 @@ async def fetch_and_post(bot, url, posted_links, ssl_context):
                 flash_msg = f"**{prefix}:**\n\n{title}\n\n@trade_with_PEACE1"
 
                 try:
-                    media_url = entry.media_content[0]['url'] if 'media_content' in entry else None
+                    # Media check fix: Safety check add kiya hai
+                    media_url = None
+                    if 'media_content' in entry and isinstance(entry.media_content, list) and len(entry.media_content) > 0:
+                        media_url = entry.media_content[0].get('url')
                     
                     if media_url:
                         await bot.send_photo(chat_id=CHANNEL_ID, photo=media_url, caption=flash_msg, parse_mode='Markdown')
@@ -63,18 +63,18 @@ async def fetch_and_post(bot, url, posted_links, ssl_context):
                         await bot.send_message(chat_id=CHANNEL_ID, text=flash_msg, parse_mode='Markdown', disable_web_page_preview=True)
                     
                     posted_links.add(entry.link)
-                    print(f"✅ Success: {title[:40]}...")
+                    print(f"✅ Sent: {title[:40]}...")
                 except Exception as e:
-                    print(f"Post Error: {e}")
+                    print(f"Telegram Error: {e}")
 
     except Exception as e:
-        print(f"Fetch Error: {e}")
+        print(f"Fetch Error from {url}: {e}")
 
 async def main():
     ssl_context = ssl._create_unverified_context()
     bot = telegram.Bot(token=BOT_TOKEN)
     posted_links = set()
-    print("🚀 Fresh News Bot Started (24h Filter Active)...")
+    print("🚀 Fixed News Bot Started...")
 
     while True:
         for source in RSS_SOURCES:
